@@ -5,17 +5,17 @@ import * as db from "./db";
 // ---- Design tokens ----
 // Paper cream #FBF6EC · Ink #2B2620 · Coral #E8623D · Mint #3F9C7C · Sun #E8A93D · Sky #4C7EA8
 
-const AVATARS = ["🦊", "🐢", "🐰", "🦁", "🐼", "🐨", "🦉", "🐧"];
-const KID_COLORS = ["#E8623D", "#3F9C7C", "#4C7EA8", "#E8A93D", "#8B5C9E", "#C25B7C"];
-const GOAL_EMOJI = ["🚲", "🎮", "🛹", "🎨", "📚", "🧸", "⚽️", "🎧", "🚁", "🐾"];
+const AVATARS = ["👸", "🤴", "🦸", "🦸‍♀️", "🧚", "🦄", "🐉", "🐬", "🦊", "🐱", "🐶", "🐼", "🦁", "🐨", "🦉", "🐧", "🌈", "⭐️", "🚀", "🦖"];
+const KID_COLORS = ["#FF5A5F", "#FF9F1C", "#FFD23F", "#3FC46A", "#2EC4B6", "#4CA6FF", "#7C5CFF", "#E84FA6"];
+const GOAL_EMOJI = ["🚲", "🎮", "🛹", "🎨", "📚", "🧸", "⚽️", "🎧", "🚁", "🐾", "👑", "🦄", "🎸", "🪀"];
 
 const fmtDate = (s) => { try { return new Date(s + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }); } catch { return s; } };
 const weeksUntil = (s) => { const ms = new Date(s + "T00:00:00") - new Date(); return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24 * 7))); };
 
 const JAR_META = {
-  spend: { label: "Spend", icon: ShoppingBag, color: "#E8A93D" },
-  save: { label: "Save", icon: PiggyBank, color: "#3F9C7C" },
-  give: { label: "Give", icon: Heart, color: "#E8623D" },
+  spend: { label: "Spend", icon: ShoppingBag, color: "#FF9F1C" },
+  save: { label: "Save", icon: PiggyBank, color: "#3FC46A" },
+  give: { label: "Give", icon: Heart, color: "#E84FA6" },
 };
 
 const inp = { width: "100%", padding: "10px 12px", border: "2px solid #2B2620", borderRadius: 10, fontSize: 13, outline: "none" };
@@ -50,12 +50,13 @@ function AuthScreen({ onAuthed }) {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center px-4" style={{ background: "#F1EEE3" }}>
-      <div className="w-full max-w-sm rounded-3xl border-[3px] p-6" style={{ borderColor: "#2B2620", background: "#fff" }}>
-        <div className="flex items-center justify-center gap-2 mb-1">
-          <Sparkles size={22} color="#E8A93D" />
-          <span className="font-extrabold text-[22px]" style={{ color: "#2B2620", fontFamily: "Georgia, serif" }}>Money Jars</span>
+    <div className="min-h-screen w-full flex items-center justify-center px-4" style={{ background: "linear-gradient(135deg,#7C5CFF 0%,#4CA6FF 40%,#2EC4B6 100%)" }}>
+      <div className="w-full max-w-sm rounded-3xl border-[3px] p-6" style={{ borderColor: "#2B2620", background: "#fff", boxShadow: "0 12px 0 rgba(43,38,32,0.15)" }}>
+        <div className="flex items-center justify-center gap-2 mb-0.5">
+          <Sparkles size={24} color="#FFD23F" />
+          <span className="font-extrabold text-[24px] tracking-tight" style={{ color: "#2B2620", fontFamily: "Georgia, serif" }}>SNV Money Jars</span>
         </div>
+        <p className="text-center text-[12px] font-bold uppercase tracking-widest mb-4" style={{ color: "#7C5CFF" }}>Budgeting for Kids</p>
         <p className="text-center text-[13px] mb-5" style={{ color: "#6b6356" }}>
           {mode === "signup" ? "Create your family account" : "Welcome back"}
         </p>
@@ -237,6 +238,48 @@ function KidView({ kid, onMarkDone, onProposeGoal }) {
   );
 }
 
+/* ============================ SPLIT EDITOR ============================ */
+function SplitEditor({ kid, onSaveSplit }) {
+  const [open, setOpen] = useState(false);
+  const sp = kid.allowance.split;
+  const [spend, setSpend] = useState(sp.spend);
+  const [save, setSave] = useState(sp.save);
+  const [give, setGive] = useState(sp.give);
+  const total = Number(spend || 0) + Number(save || 0) + Number(give || 0);
+  const ok = total === 100;
+
+  if (!open) {
+    return (
+      <div className="flex items-center justify-between">
+        <span className="text-[11.5px] font-medium" style={{ color: "#6b6356" }}>Splits {sp.spend}% Spend · {sp.save}% Save · {sp.give}% Give</span>
+        <button onClick={() => { setSpend(sp.spend); setSave(sp.save); setGive(sp.give); setOpen(true); }} className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#7C5CFF", color: "#fff" }}>Edit split</button>
+      </div>
+    );
+  }
+  const row = (label, val, setVal, color) => (
+    <div className="flex items-center gap-2">
+      <span className="text-[11.5px] font-bold w-12" style={{ color }}>{label}</span>
+      <input type="number" min="0" max="100" value={val} onChange={(e) => setVal(e.target.value === "" ? "" : Number(e.target.value))}
+        className="flex-1" style={{ ...inp, padding: "6px 8px" }} />
+      <span className="text-[12px] font-bold" style={{ color: "#6b6356" }}>%</span>
+    </div>
+  );
+  return (
+    <div className="space-y-2">
+      {row("Spend", spend, setSpend, "#FF9F1C")}
+      {row("Save", save, setSave, "#3FC46A")}
+      {row("Give", give, setGive, "#E84FA6")}
+      <div className="flex items-center justify-between">
+        <span className="text-[11.5px] font-bold" style={{ color: ok ? "#3FC46A" : "#FF5A5F" }}>Total: {total}%{ok ? " ✓" : " — must equal 100"}</span>
+        <div className="flex gap-1.5">
+          <button onClick={() => setOpen(false)} className="text-[11px] font-bold px-2.5 py-1 rounded-full border-2" style={{ borderColor: "#2B2620", color: "#2B2620" }}>Cancel</button>
+          <button disabled={!ok} onClick={async () => { await onSaveSplit(kid.id, { spend: Number(spend), save: Number(save), give: Number(give) }); setOpen(false); }} className="text-[11px] font-bold px-2.5 py-1 rounded-full text-white" style={{ background: ok ? "#3FC46A" : "#bbb" }}>Save</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ============================ PARENT VIEW ============================ */
 function ParentView({ kids, actions }) {
   const [openKid, setOpenKid] = useState(null);
@@ -293,7 +336,7 @@ function ParentView({ kids, actions }) {
                 {["auto", "manual"].map((m) => (<button key={m} onClick={() => actions.setAllowanceMode(kid.id, m)} className="flex-1 text-[11.5px] font-bold py-1 rounded-full" style={{ background: kid.allowance.mode === m ? "#E8A93D" : "transparent", color: kid.allowance.mode === m ? "#2B2620" : "#6b6356" }}>{m === "auto" ? "Auto-split" : "One jar"}</button>))}
               </div>
               {kid.allowance.mode === "auto" ? (
-                <div className="text-[11.5px] font-medium" style={{ color: "#6b6356" }}>Splits {sp.spend}% Spend · {sp.save}% Save · {sp.give}% Give</div>
+                <SplitEditor kid={kid} onSaveSplit={actions.saveSplit} />
               ) : (
                 <div className="flex items-center gap-2">
                   <span className="text-[11.5px] font-medium" style={{ color: "#6b6356" }}>All to:</span>
@@ -383,6 +426,7 @@ export default function App() {
     runAllowance: wrap(db.runAllowance),
     setAllowanceMode: wrap(db.setAllowanceMode),
     setManualJar: wrap(db.setManualJar),
+    saveSplit: wrap(db.saveSplit),
     addDeposit: wrap((kidId, d) => db.addDeposit(kidId, d)),
     toggleSaveLock: wrap(db.toggleSaveLock),
     toggleMatch: wrap(db.toggleMatch),
@@ -394,22 +438,28 @@ export default function App() {
   const markDone = wrap(db.markChoreDone);
   const proposeGoal = wrap((kidId, g) => db.proposeGoal(kidId, g));
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center" style={{ background: "#F1EEE3", color: "#2B2620", fontFamily: "Georgia, serif" }}>Loading Money Jars…</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(135deg,#7C5CFF,#4CA6FF)", color: "#fff", fontFamily: "Georgia, serif", fontSize: 18 }}>Loading SNV Money Jars…</div>;
   if (!authed) return <AuthScreen onAuthed={onAuthed} />;
 
   const kid = kids.find((k) => k.id === activeKid) || kids[0];
 
   return (
-    <div className="min-h-screen w-full flex justify-center" style={{ background: "#F1EEE3" }}>
+    <div className="min-h-screen w-full flex justify-center" style={{ background: "linear-gradient(180deg,#FFF4E0 0%,#FDE9F4 100%)" }}>
       <div className="w-full max-w-md px-4 py-6" style={{ fontFamily: "'Trebuchet MS', system-ui, sans-serif" }}>
         <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-1.5"><Sparkles size={18} color="#E8A93D" /><span className="font-extrabold text-[18px]" style={{ color: "#2B2620", fontFamily: "Georgia, serif" }}>Money Jars</span></div>
-          <div className="flex items-center gap-2">
-            <div className="flex rounded-full border-2 p-0.5" style={{ borderColor: "#2B2620" }}>
-              <button onClick={() => setMode("kid")} className="text-[12px] font-bold px-3 py-1 rounded-full" style={{ background: mode === "kid" ? "#2B2620" : "transparent", color: mode === "kid" ? "#fff" : "#2B2620" }}>Kid</button>
-              <button onClick={() => setMode("parent")} className="text-[12px] font-bold px-3 py-1 rounded-full" style={{ background: mode === "parent" ? "#2B2620" : "transparent", color: mode === "parent" ? "#fff" : "#2B2620" }}>Parent</button>
+          <div className="flex items-center gap-1.5">
+            <Sparkles size={20} color="#FFD23F" />
+            <div className="leading-none">
+              <div className="font-extrabold text-[18px]" style={{ color: "#2B2620", fontFamily: "Georgia, serif" }}>SNV Money Jars</div>
+              <div className="text-[9.5px] font-bold uppercase tracking-widest mt-0.5" style={{ color: "#7C5CFF" }}>Budgeting for Kids</div>
             </div>
-            <button onClick={signOut} className="text-[11px] font-bold px-2.5 py-1.5 rounded-full border-2" style={{ borderColor: "#2B2620", color: "#2B2620" }}>Sign out</button>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex rounded-full border-2 p-0.5" style={{ borderColor: "#2B2620", background: "#fff" }}>
+              <button onClick={() => setMode("kid")} className="text-[12px] font-bold px-3 py-1 rounded-full" style={{ background: mode === "kid" ? "#7C5CFF" : "transparent", color: mode === "kid" ? "#fff" : "#2B2620" }}>Kid</button>
+              <button onClick={() => setMode("parent")} className="text-[12px] font-bold px-3 py-1 rounded-full" style={{ background: mode === "parent" ? "#7C5CFF" : "transparent", color: mode === "parent" ? "#fff" : "#2B2620" }}>Parent</button>
+            </div>
+            <button onClick={signOut} className="text-[11px] font-bold px-2.5 py-1.5 rounded-full border-2" style={{ borderColor: "#2B2620", color: "#2B2620", background: "#fff" }}>Sign out</button>
           </div>
         </div>
 
