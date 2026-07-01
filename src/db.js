@@ -197,6 +197,13 @@ export async function setManualJar(kidId, manualJar) {
   if (error) throw error;
 }
 
+export async function saveSplit(kidId, { spend, save, give }) {
+  const { error } = await supabase.from("allowances").update({
+    split_spend: spend, split_save: save, split_give: give,
+  }).eq("kid_id", kidId);
+  if (error) throw error;
+}
+
 // Runs an allowance payment: reads config + current jars, computes
 // the split (or single jar), writes new jar balances + a tx row.
 export async function runAllowance(kidId) {
