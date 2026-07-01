@@ -5,7 +5,15 @@ import * as db from "./db";
 // ---- Design tokens ----
 // Paper cream #FBF6EC · Ink #2B2620 · Coral #E8623D · Mint #3F9C7C · Sun #E8A93D · Sky #4C7EA8
 
-const AVATARS = ["👸", "🤴", "🦸", "🦸‍♀️", "🧚", "🦄", "🐉", "🐬", "🦊", "🐱", "🐶", "🐼", "🦁", "🐨", "🦉", "🐧", "🌈", "⭐️", "🚀", "🦖"];
+const AVATARS = [
+  "👸🏻", "👸🏽", "👸🏾", "👸🏿",
+  "🤴🏻", "🤴🏽", "🤴🏾", "🤴🏿",
+  "🦸🏻‍♀️", "🦸🏽‍♀️", "🦸🏾‍♀️", "🦸🏿‍♀️",
+  "🦸🏻‍♂️", "🦸🏽‍♂️", "🦸🏾‍♂️", "🦸🏿‍♂️",
+  "🧚🏽", "🧚🏿", "🧑🏾‍🚀", "🧑🏿‍🎤",
+  "🦄", "🐉", "🌈", "⭐️", "🚀", "🦖",
+  "🦊", "🐱", "🐶", "🐼", "🦁", "🐨",
+];
 const KID_COLORS = ["#FF5A5F", "#FF9F1C", "#FFD23F", "#3FC46A", "#2EC4B6", "#4CA6FF", "#7C5CFF", "#E84FA6"];
 const GOAL_EMOJI = ["🚲", "🎮", "🛹", "🎨", "📚", "🧸", "⚽️", "🎧", "🚁", "🐾", "👑", "🦄", "🎸", "🪀"];
 
@@ -285,8 +293,18 @@ function ParentView({ kids, actions }) {
   const [openKid, setOpenKid] = useState(null);
   const [amount, setAmount] = useState(""); const [jar, setJar] = useState("save"); const [label, setLabel] = useState("");
   const [addingKid, setAddingKid] = useState(false);
-  const [newKidName, setNewKidName] = useState(""); const [newAvatar, setNewAvatar] = useState("🦊"); const [newColor, setNewColor] = useState("#E8623D");
+  const [newKidName, setNewKidName] = useState(""); const [newAvatar, setNewAvatar] = useState("👸🏽"); const [newColor, setNewColor] = useState("#FF5A5F");
   const [choreKid, setChoreKid] = useState(null); const [choreLabel, setChoreLabel] = useState(""); const [choreAmt, setChoreAmt] = useState("");
+  const [amtKid, setAmtKid] = useState(null); const [amtVal, setAmtVal] = useState(""); const [freqVal, setFreqVal] = useState("weekly");
+  const [editKid, setEditKid] = useState(null); const [editName, setEditName] = useState(""); const [editAvatar, setEditAvatar] = useState("👸🏽"); const [editColor, setEditColor] = useState("#FF5A5F");
+
+  // keep amount editor inputs in sync when opened
+  useEffect(() => {
+    if (amtKid) { const k = kids.find((x) => x.id === amtKid); if (k) { setAmtVal(String(k.allowance.amount)); setFreqVal(k.allowance.freq); } }
+  }, [amtKid]);
+  useEffect(() => {
+    if (editKid) { const k = kids.find((x) => x.id === editKid); if (k) { setEditName(k.name); setEditAvatar(k.avatar); setEditColor(k.color); } }
+  }, [editKid]);
 
   return (
     <div className="space-y-5">
@@ -312,8 +330,26 @@ function ParentView({ kids, actions }) {
           <div key={kid.id} className="rounded-3xl border-[3px] p-4" style={{ borderColor: "#2B2620", background: "#fff" }}>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2"><span className="text-2xl">{kid.avatar}</span><div><div className="font-bold text-[15px]" style={{ color: "#2B2620" }}>{kid.name}</div><div className="text-[12px]" style={{ color: "#6b6356" }}>Total: ${total}</div></div></div>
-              <button onClick={() => setOpenKid(openKid === kid.id ? null : kid.id)} className="flex items-center gap-1 text-[12px] font-bold px-3 py-1.5 rounded-full text-white" style={{ background: kid.color }}><Plus size={14} /> Add money</button>
+              <div className="flex items-center gap-1.5">
+                <button onClick={() => setEditKid(editKid === kid.id ? null : kid.id)} className="text-[11px] font-bold px-2 py-1.5 rounded-full border-2" style={{ borderColor: "#2B2620", color: "#2B2620" }}>Edit</button>
+                <button onClick={() => setOpenKid(openKid === kid.id ? null : kid.id)} className="flex items-center gap-1 text-[12px] font-bold px-3 py-1.5 rounded-full text-white" style={{ background: kid.color }}><Plus size={14} /> Add money</button>
+              </div>
             </div>
+
+            {editKid === kid.id && (
+              <div className="rounded-2xl border-2 p-3 mb-3 space-y-2" style={{ borderColor: "#2B2620", background: "#fff" }}>
+                <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Name" style={inp} />
+                <div className="flex flex-wrap gap-1.5">{AVATARS.map((a) => <button key={a} onClick={() => setEditAvatar(a)} className="text-[18px] w-8 h-8 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: editAvatar === a ? "#7C5CFF" : "#e5ded0", background: editAvatar === a ? "#EFEBFF" : "#fff" }}>{a}</button>)}</div>
+                <div className="flex flex-wrap gap-1.5">{KID_COLORS.map((c) => <button key={c} onClick={() => setEditColor(c)} className="w-7 h-7 rounded-full border-2" style={{ borderColor: editColor === c ? "#2B2620" : "#fff", background: c }} />)}</div>
+                <div className="flex items-center justify-between pt-1">
+                  <button onClick={async () => { if (window.confirm(`Delete ${kid.name}? This removes all their jars, chores, and history. This can't be undone.`)) { await actions.deleteKid(kid.id); setEditKid(null); } }} className="text-[11px] font-bold px-2.5 py-1.5 rounded-full text-white" style={{ background: "#FF5A5F" }}>Delete kid</button>
+                  <div className="flex gap-1.5">
+                    <button onClick={() => setEditKid(null)} className="text-[11px] font-bold px-2.5 py-1.5 rounded-full border-2" style={{ borderColor: "#2B2620", color: "#2B2620" }}>Cancel</button>
+                    <button onClick={async () => { if (!editName.trim()) return; await actions.updateKid(kid.id, { name: editName.trim(), avatar: editAvatar, color: editColor }); setEditKid(null); }} className="text-[11px] font-bold px-2.5 py-1.5 rounded-full text-white" style={{ background: "#3FC46A" }}>Save</button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {kid.goalProposal && (
               <div className="rounded-2xl border-2 border-dashed p-3 mb-3" style={{ borderColor: "#E8A93D", background: "#FFF8EA" }}>
@@ -329,9 +365,28 @@ function ParentView({ kids, actions }) {
             {/* Allowance */}
             <div className="rounded-2xl border-2 p-3 mb-3" style={{ borderColor: "#2B2620", background: "#FFF8EA" }}>
               <div className="flex items-center justify-between mb-2">
-                <span className="flex items-center gap-1.5 text-[13px] font-bold" style={{ color: "#2B2620" }}><Repeat size={14} color="#E8A93D" /> Allowance: ${kid.allowance.amount}/{kid.allowance.freq === "weekly" ? "wk" : "mo"}</span>
-                <button onClick={() => actions.runAllowance(kid.id)} className="text-[11px] font-bold px-2.5 py-1 rounded-full text-white" style={{ background: "#E8A93D" }}>Pay now</button>
+                <span className="flex items-center gap-1.5 text-[13px] font-bold" style={{ color: "#2B2620" }}><Repeat size={14} color="#FF9F1C" /> Allowance: ${kid.allowance.amount}/{kid.allowance.freq === "weekly" ? "wk" : "mo"}</span>
+                <div className="flex items-center gap-1.5">
+                  <button onClick={() => setAmtKid(amtKid === kid.id ? null : kid.id)} className="text-[11px] font-bold px-2 py-1 rounded-full" style={{ background: "#7C5CFF", color: "#fff" }}>Edit</button>
+                  <button onClick={() => actions.runAllowance(kid.id)} className="text-[11px] font-bold px-2.5 py-1 rounded-full text-white" style={{ background: "#FF9F1C" }}>Pay now</button>
+                </div>
               </div>
+              {amtKid === kid.id && (
+                <div className="rounded-xl border-2 p-2.5 mb-2 space-y-2" style={{ borderColor: "#2B2620", background: "#fff" }}>
+                  <div className="flex gap-2 items-center">
+                    <span className="text-[12px] font-bold" style={{ color: "#2B2620" }}>$</span>
+                    <input type="number" min="0" value={amtVal} onChange={(e) => setAmtVal(e.target.value)} placeholder="amount" className="flex-1" style={{ ...inp, padding: "6px 8px" }} />
+                    <select value={freqVal} onChange={(e) => setFreqVal(e.target.value)} style={{ ...inp, padding: "6px 8px", width: "auto" }}>
+                      <option value="weekly">/ week</option>
+                      <option value="monthly">/ month</option>
+                    </select>
+                  </div>
+                  <div className="flex gap-1.5 justify-end">
+                    <button onClick={() => setAmtKid(null)} className="text-[11px] font-bold px-2.5 py-1 rounded-full border-2" style={{ borderColor: "#2B2620", color: "#2B2620" }}>Cancel</button>
+                    <button onClick={async () => { const n = Number(amtVal); if (isNaN(n) || n < 0) return; await actions.saveAllowanceAmount(kid.id, { amount: n, freq: freqVal }); setAmtKid(null); }} className="text-[11px] font-bold px-2.5 py-1 rounded-full text-white" style={{ background: "#3FC46A" }}>Save</button>
+                  </div>
+                </div>
+              )}
               <div className="flex rounded-full border-2 p-0.5 mb-2" style={{ borderColor: "#2B2620", background: "#fff" }}>
                 {["auto", "manual"].map((m) => (<button key={m} onClick={() => actions.setAllowanceMode(kid.id, m)} className="flex-1 text-[11.5px] font-bold py-1 rounded-full" style={{ background: kid.allowance.mode === m ? "#E8A93D" : "transparent", color: kid.allowance.mode === m ? "#2B2620" : "#6b6356" }}>{m === "auto" ? "Auto-split" : "One jar"}</button>))}
               </div>
@@ -423,6 +478,9 @@ export default function App() {
   const wrap = (fn) => async (...args) => { await fn(...args); await refresh(); };
   const actions = {
     addKid: wrap(db.addKid),
+    updateKid: wrap((kidId, patch) => db.updateKid(kidId, patch)),
+    deleteKid: wrap(db.deleteKid),
+    saveAllowanceAmount: wrap((kidId, v) => db.saveAllowanceAmount(kidId, v)),
     runAllowance: wrap(db.runAllowance),
     setAllowanceMode: wrap(db.setAllowanceMode),
     setManualJar: wrap(db.setManualJar),
