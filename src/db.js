@@ -176,7 +176,27 @@ export async function toggleSaveLock(kidId, locked) {
   if (error) throw error;
 }
 
+export async function updateKid(kidId, { name, avatar, color }) {
+  const patch = {};
+  if (name !== undefined) patch.name = name;
+  if (avatar !== undefined) patch.avatar = avatar;
+  if (color !== undefined) patch.color = color;
+  const { error } = await supabase.from("kids").update(patch).eq("id", kidId);
+  if (error) throw error;
+}
+
+export async function deleteKid(kidId) {
+  // Cascades remove jars/allowances/goals/causes/chores/transactions.
+  const { error } = await supabase.from("kids").delete().eq("id", kidId);
+  if (error) throw error;
+}
+
 /* ---------------- ALLOWANCE ---------------- */
+
+export async function saveAllowanceAmount(kidId, { amount, freq }) {
+  const { error } = await supabase.from("allowances").update({ amount, freq }).eq("kid_id", kidId);
+  if (error) throw error;
+}
 
 export async function saveAllowance(kidId, { amount, freq, mode, manualJar, split }) {
   const { error } = await supabase.from("allowances").upsert({
